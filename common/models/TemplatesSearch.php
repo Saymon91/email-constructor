@@ -6,6 +6,13 @@ use yii\data\ActiveDataProvider;
 
 class TemplatesSearch extends Templates
 {
+    public function rules()
+    {
+        return [
+            [['title', 'filename'], 'string']
+        ];
+    }
+
     public function search($params): ActiveDataProvider
     {
         $query = self::find();
