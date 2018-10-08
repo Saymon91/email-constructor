@@ -7,7 +7,7 @@ use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
-use yii\helpers\Url;
+use yii\helpers\{Url, Json};
 use Yii;
 use yii\web\ServerErrorHttpException;
 
@@ -20,21 +20,22 @@ class TemplatesController extends \yii\web\Controller
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'edit', 'delete'],
+                        'actions' => ['index', 'create', 'edit', 'delete', 'view'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'index' => ['GET'],
                     'create' => ['GET', 'POST'],
                     'edit' => ['GET', 'PATCH'],
+                    'view' => ['GET'],
                     'delete' => ['DELETE'],
                 ],
             ],
@@ -68,7 +69,7 @@ class TemplatesController extends \yii\web\Controller
 
         $model->load(Yii::$app->request->getBodyParams());
         if (!$model->validate()) {
-            throw new BadRequestHttpException('Bat parameters: ' . implode(',', $model->getErrors()));
+            throw new BadRequestHttpException('Bat parameters: ' . Json::encode($model->getErrors()));
         }
 
         if (!$model->save()) {
@@ -98,9 +99,14 @@ class TemplatesController extends \yii\web\Controller
         return $this->render('index');
     }
 
-    public function actionView()
+    public function actionView(int $id)
     {
-        return $this->render('view');
+        $template = Templates::findOne($id);
+        if (!$template) {
+            throw new NotFoundHttpException('Template not found');
+        }
+
+        return $this->renderFile(Yii::getAlias('@common/views/templates/view.php'), ['template' => $template]);
     }
 
 }

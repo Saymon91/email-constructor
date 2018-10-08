@@ -31,11 +31,12 @@ class Templates extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'filename', 'created_at', 'updated_at'], 'required'],
             [['created_at', 'updated_at'], 'integer'],
             [['title', 'filename'], 'string', 'max' => 255],
             [['title'], 'unique'],
             [['filename'], 'unique'],
+            [['created_at', 'updated_at'], 'default', 'value' => time()],
+            [['title', 'filename', 'created_at', 'updated_at'], 'required'],
         ];
     }
 
@@ -70,6 +71,17 @@ class Templates extends \yii\db\ActiveRecord
 
     public function getTemplate()
     {
-        return '';
+        $path = Yii::getAlias("@templates/$this->filename");
+        echo Yii::getAlias("@templates/$this->filename");
+        die();
+        return file_exists($path) ? file_get_contents($path) : null;
+    }
+
+    public function setTemplate(string $template)
+    {
+        $path = Yii::getAlias("@templates/$this->filename");
+        $file = file_exists($path) ? fopen($path, 'w+') : fopen($path, 'w');
+        fwrite($file, $template);
+        fclose($file);
     }
 }
