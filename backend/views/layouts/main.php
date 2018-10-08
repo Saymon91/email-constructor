@@ -35,13 +35,13 @@ AppAsset::register($this);
             'class' => 'navbar-inverse navbar-fixed-top',
         ],
     ]);
-    $menuItems = [
-        ['label' => 'Templates', 'url' => ['/templates/index']],
-        ['label' => 'Add template', 'url' => ['/templates/create']],
-    ];
+    $menuItems = [];
+
     if (Yii::$app->user->isGuest) {
         $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
     } else {
+        $menuItems[] = ['label' => 'Templates', 'url' => ['/templates/index']];
+        $menuItems[] = ['label' => 'Add template', 'url' => ['/templates/create']];
         $menuItems[] = '<li>'
             . Html::beginForm(['/site/logout'], 'post')
             . Html::submitButton(

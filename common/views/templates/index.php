@@ -1,9 +1,26 @@
 <?php
-/* @var $this yii\web\View */
-?>
-<h1>templates/index</h1>
 
-<p>
-    You may change the content of this page by modifying
-    the file <code><?= __FILE__; ?></code>.
-</p>
+use yii\grid\{GridView, ActionColumn};
+
+/* @var $this yii\web\View */
+/* @var $searchModel common\models\TemplatesSearch */
+/* @var $dataProvider yii\data\ActiveDataProvider */
+
+$this->title = 'Templates list';
+?>
+<div class="templates">
+    <?= GridView::widget([
+      'dataProvider' => $dataProvider,
+      'filterModel' => $searchModel,
+      'columns' => [
+          'id',
+          'title',
+          'filename',
+          'created_at:datetime',
+          'updated_at:datetime',
+          [
+              'class' => ActionColumn::class
+          ]
+      ]
+    ]); ?>
+</div>

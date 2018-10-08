@@ -3,7 +3,9 @@
 namespace backend\controllers;
 
 use common\models\Templates;
+use common\models\TemplatesSearch;
 use yii\web\BadRequestHttpException;
+use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -11,8 +13,10 @@ use yii\helpers\{Url, Json};
 use Yii;
 use yii\web\ServerErrorHttpException;
 
-class TemplatesController extends \yii\web\Controller
+class TemplatesController extends Controller
 {
+    public $layout = 'main';
+
     /**
      * {@inheritdoc}
      */
@@ -23,7 +27,7 @@ class TemplatesController extends \yii\web\Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'edit', 'delete', 'view'],
+                        'actions' => ['index', 'create', 'update', 'delete', 'view'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -34,7 +38,7 @@ class TemplatesController extends \yii\web\Controller
                 'actions' => [
                     'index' => ['GET'],
                     'create' => ['GET', 'POST'],
-                    'edit' => ['GET', 'PATCH'],
+                    'update' => ['GET', 'PATCH', 'POST'],
                     'view' => ['GET'],
                     'delete' => ['DELETE'],
                 ],
@@ -56,9 +60,9 @@ class TemplatesController extends \yii\web\Controller
 
     /**
      * @return string
-     * @throws \yii\base\InvalidConfigException
      * @throws BadRequestHttpException
      * @throws ServerErrorHttpException
+     * @throws \yii\base\InvalidConfigException
      */
     public function actionCreate()
     {
@@ -67,48 +71,101 @@ class TemplatesController extends \yii\web\Controller
             return $this->render('edit', ['model' => $model]);
         }
 
-        $model->load(Yii::$app->request->getBodyParams());
-        if (!$model->validate()) {
-            throw new BadRequestHttpException('Bat parameters: ' . Json::encode($model->getErrors()));
-        }
-
-        $model->template = Yii::$app->request->getBodyParams()[$model->formName()]['template'];
-
-        if (!$model->save()) {
-            throw new ServerErrorHttpException('Error save template');
-        }
+        $this->edit($model);
 
         return $this->redirect(Url::toRoute(['templates/view', 'id' => $model->id]));
     }
 
-    public function actionDelete()
-    {
-        return $this->render('delete');
-    }
-
-    public function actionEdit(int $id)
+    /**
+     * @param int $id
+     * @return string
+     * @throws NotFoundHttpException
+     * @throws \Exception
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function actionDelete(int $id)
     {
         $model = Templates::findOne($id);
         if (!$model) {
             throw new NotFoundHttpException('Template not found');
         }
 
-        return $this->render('edit');
+        $model->delete();
+
+        Yii::$app->session->addFlash('errors', 'Template is removed');
+
+        return $this->redirect(Url::to('index'));
+    }
+
+    /**
+     * @param int $id
+     * @return string|\yii\web\Response
+     * @throws BadRequestHttpException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function actionUpdate(int $id)
+    {
+        $model = Templates::findOne($id);
+        if (!$model) {
+            throw new NotFoundHttpException('Template not found');
+        }
+
+        if (Yii::$app->request->isGet) {
+            return $this->render('edit', ['model' => $model]);
+        }
+
+        $this->edit($model);
+
+        return $this->redirect(Url::toRoute(['templates/view', 'id' => $model->id]));
+    }
+
+    /**
+     * @param $template
+     * @throws BadRequestHttpException
+     * @throws ServerErrorHttpException
+     * @throws \yii\base\InvalidConfigException
+     */
+    private function edit($template)
+    {
+        $template->load(Yii::$app->request->getBodyParams());
+        if (!$template->validate()) {
+            throw new BadRequestHttpException('Bat parameters: ' . Json::encode($template->getErrors()));
+        }
+
+        $data = Yii::$app->request->getBodyParams()[$template->formName()];
+
+        if (isset($data['template'])) {
+            $template->template = $data['template'];
+        }
+
+        if (!$template->save()) {
+            throw new ServerErrorHttpException('Error save template');
+        }
     }
 
     public function actionIndex()
     {
-        return $this->render('index');
+        $model = new TemplatesSearch();
+        $dataProvider = $model->search(Yii::$app->request->queryParams);
+        return $this->render('@common/views/templates/index', ['searchModel' => $model, 'dataProvider' => $dataProvider]);
     }
 
+    /**
+     * @param int $id
+     * @return string
+     * @throws NotFoundHttpException
+     */
     public function actionView(int $id)
     {
-        $template = Templates::findOne($id);
-        if (!$template) {
+        $model = Templates::findOne($id);
+        if (!$model) {
             throw new NotFoundHttpException('Template not found');
         }
 
-        return $this->renderFile(Yii::getAlias('@common/views/templates/view.php'), ['template' => $template]);
+        return $this->render('@common/views/templates/view', ['model' => $model]);
     }
 
 }
