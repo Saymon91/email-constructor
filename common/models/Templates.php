@@ -72,15 +72,13 @@ class Templates extends \yii\db\ActiveRecord
     public function getTemplate()
     {
         $path = Yii::getAlias("@templates/$this->filename");
-        echo Yii::getAlias("@templates/$this->filename");
-        die();
         return file_exists($path) ? file_get_contents($path) : null;
     }
 
     public function setTemplate(string $template)
     {
         $path = Yii::getAlias("@templates/$this->filename");
-        $file = file_exists($path) ? fopen($path, 'w+') : fopen($path, 'w');
+        $file = fopen($path, 'w');
         fwrite($file, $template);
         fclose($file);
     }

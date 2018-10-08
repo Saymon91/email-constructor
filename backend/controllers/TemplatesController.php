@@ -72,6 +72,8 @@ class TemplatesController extends \yii\web\Controller
             throw new BadRequestHttpException('Bat parameters: ' . Json::encode($model->getErrors()));
         }
 
+        $model->template = Yii::$app->request->getBodyParams()[$model->formName()]['template'];
+
         if (!$model->save()) {
             throw new ServerErrorHttpException('Error save template');
         }
